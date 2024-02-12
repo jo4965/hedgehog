@@ -77,10 +77,10 @@ async def hedge(hedge_data: HedgeData, background_tasks: BackgroundTasks):
     # USDT.P
     quote = hedge_data.quote
 
+    amount = hedge_data.amount
+
     # ON or OFF
     hedge = hedge_data.hedge
-
-    amount = hedge_data.amount
 
     result = start_hedge(user_name, base, quote, amount, hedge, background_tasks)
     return result
@@ -159,15 +159,6 @@ def start_hedge(user_name, base, quote, amount, hedge, background_tasks: Backgro
                 "종료할 수량이 없습니다. Upbit: %d, Binance: %d" % (upbit_amount, binance_amount)))
             return create_default_error()
 
-        upbit_client = UpbitClient(user_info.upbit_api_key,
-                                   user_info.upbit_api_secret)
-
-        upbit_sell_res = upbit_client.request_sell_order(base, upbit_amount)
-        if not OrderState.is_order_completed(upbit_sell_res):
-            upbit_sell_res = upbit_client.wait_until_order_done(upbit_sell_res)
-
-        hedge_adapter.save_close_history_from_upbit(user_name, base, upbit_sell_res)
-
         binance_client = BinanceFuturesClient(user_info.binance_api_key,
                                               user_info.binance_api_secret)
 
@@ -181,6 +172,15 @@ def start_hedge(user_name, base, quote, amount, hedge, background_tasks: Backgro
 
         hedge_adapter.save_close_history_from_binance(user_name, base, user_info.binance_leverage,
                                                       binance_close_res)
+
+        upbit_client = UpbitClient(user_info.upbit_api_key,
+                                   user_info.upbit_api_secret)
+
+        upbit_sell_res = upbit_client.request_sell_order(base, upbit_amount)
+        if not OrderState.is_order_completed(upbit_sell_res):
+            upbit_sell_res = upbit_client.wait_until_order_done(upbit_sell_res)
+
+        hedge_adapter.save_close_history_from_upbit(user_name, base, upbit_sell_res)
 
         upbit_sell_price_krw = 0
         for trade in upbit_sell_res.get("trades"):

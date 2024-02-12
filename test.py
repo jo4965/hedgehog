@@ -15,16 +15,18 @@ ENVIRON_UPBIT_SECRET="UPBIT_SECRET"
 
 if __name__ == '__main__':
 
-    start_hedge("zenike", "BTC", "USDT.P", 0.003, "OFF", BackgroundTasks())
+    # start_hedge("zenike", "BTC", "USDT.P", 0.003, "OFF", BackgroundTasks())
 
-    # symbol = "BTCUSDT"
-    # binance_client = BinanceFuturesClient(key=os.getenv(ENVIRON_BINANCE_KEY),
-    #                                       secret=os.getenv(ENVIRON_BINANCE_SECRET))
-    #
+    symbol = "BTCUSDT"
+    binance_client = BinanceFuturesClient(key=os.getenv(ENVIRON_BINANCE_KEY),
+                                          secret=os.getenv(ENVIRON_BINANCE_SECRET))
+    res = binance_client.query_order("BTC", 261724492140)
+    print(json.dumps(res))
 
-    # upbit_client = UpbitClient(os.getenv(ENVIRON_UPBIT_KEY), os.getenv(ENVIRON_UPBIT_SECRET))
-    # res = upbit_client.request_sell_order("KRW-BTC", 0.00306734)
-
+    upbit_client = UpbitClient(os.getenv(ENVIRON_UPBIT_KEY),
+                               os.getenv(ENVIRON_UPBIT_SECRET))
+    res = upbit_client.query_order("8adf8653-d6df-4a5f-9444-4c82089d1a0f")
+    print(json.dumps(res))
     #
     # binance_client.create_order_with_conditions(symbol, "SELL", "MARKET", 0.003, leverage=10)
     # binance_client.cancel_order(symbol, 261724492140)
