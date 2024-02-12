@@ -1,0 +1,10 @@
+fastapi==0.99.0
+uvicorn[standard]==0.22.0
+pocketbase==0.8.2
+python-dotenv~=1.0.1
+pyupbit~=0.2.33
+pydantic~=1.10.10
+PyJWT~=2.7.0
+dhooks~=1.1.4
+loguru~=0.7.0
+devtools~=0.11.0
