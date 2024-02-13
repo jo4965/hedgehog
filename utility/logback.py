@@ -72,7 +72,7 @@ class LoggerWithDiscord:
 
         embed.add_field(
             name="가격",
-            value=f"{exchange}: {round(exchange_krw_price)}원\n UPBIT: {round(upbit_krw_price)}원",
+            value=f"{exchange}: {round(exchange_krw_price)}원\nUPBIT: {round(upbit_krw_price)}원",
             inline=False,
         )
 
