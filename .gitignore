@@ -3,3 +3,5 @@
 .env
 pocketbase_amd64/pb_data/*
 pocketbase_arm64/pb_data/*
+log/*
+nohup.out
