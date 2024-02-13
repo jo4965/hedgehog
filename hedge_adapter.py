@@ -65,37 +65,38 @@ def save_history(user_name: str,
                   })
 
 
-def save_current_hedge_from_upbit(user_name, base, upbit_response):
+def save_current_hedge_from_upbit(user_name, base, upbit_response, one_dollar_into_krw: float):
     bought_amount = float(upbit_response.get("executed_volume"))
     bought_price_krw = float(upbit_response.get("price"))
 
     save_current_hedge(user_name, base, "Upbit",
                        bought_amount,
                        round(bought_price_krw),
-                       round(bought_price_krw * 0.00075))  # dollar exchange
+                       round(bought_price_krw / one_dollar_into_krw))  # dollar exchange
 
     save_history(user_name, base, "Upbit", 1, "entry",
                  bought_amount,
                  round(bought_price_krw),
-                 round(bought_price_krw * 0.00075))  # dollar exchange
+                 round(bought_price_krw / one_dollar_into_krw))  # dollar exchange
 
 
-def save_current_hedge_from_binance(user_name, base, leverage, binance_response: OrderResponse):
+def save_current_hedge_from_binance(user_name, base, leverage, binance_response: OrderResponse,
+                                    one_dollar_into_krw: float):
     bought_amount = binance_response.origQty
     bought_price_usd = binance_response.cumQuote
 
     save_current_hedge(user_name, base, "Binance",
                        bought_amount,
-                       round(bought_price_usd * 1350),
+                       round(bought_price_usd * one_dollar_into_krw),
                        round(bought_price_usd))  # dollar exchange
 
     save_history(user_name, base, "Binance", leverage, "entry",
                  bought_amount,
-                 round(bought_price_usd * 1350),
+                 round(bought_price_usd * one_dollar_into_krw),
                  round(bought_price_usd))  # dollar exchange
 
 
-def save_close_history_from_upbit(user_name, base, upbit_response):
+def save_close_history_from_upbit(user_name, base, upbit_response, one_dollar_into_krw):
     sell_amount = float(upbit_response.get("executed_volume"))
     sell_price_krw = 0.0
 
@@ -105,16 +106,17 @@ def save_close_history_from_upbit(user_name, base, upbit_response):
     save_history(user_name, base, "Upbit", 1, "close",
                  sell_amount,
                  round(sell_price_krw),
-                 round(sell_price_krw * 0.00075))  # dollar exchange
+                 round(sell_price_krw / one_dollar_into_krw))  # dollar exchange
 
 
-def save_close_history_from_binance(user_name, base, leverage, binance_response: OrderResponse):
+def save_close_history_from_binance(user_name, base, leverage, binance_response: OrderResponse,
+                                    one_dollar_into_krw: float):
     close_amount = binance_response.origQty
     close_price_usd = binance_response.cumQuote
 
     save_history(user_name, base, "Binance", leverage, "close",
                  close_amount,
-                 round(close_price_usd * 1350),
+                 round(close_price_usd * one_dollar_into_krw),
                  round(close_price_usd))  # dollar exchange
 
 
@@ -124,7 +126,7 @@ def clear_current_hedge(records):
 
 
 def calculate_and_save_profit(user_name, base, leverage, amount,
-                              entry_kimp_krw, close_kimp_krw, profit_kimp_krw):
+                              entry_kimp_krw, close_kimp_krw):
     pocket.create("profit",
                   {
                       "user_name": user_name,
@@ -133,11 +135,11 @@ def calculate_and_save_profit(user_name, base, leverage, amount,
                       "amount": amount,
                       "KRW_entry_kimp": round(entry_kimp_krw),
                       "KRW_close_kimp": round(close_kimp_krw),
-                      "KRW_kimp_profit": round(profit_kimp_krw),
+                      "KRW_kimp_profit": round(close_kimp_krw - entry_kimp_krw),
                   })
 
 
-def calculate_krw_entry_kimp(hedge_records):
+def calculate_entry_kimp(hedge_records):
     upbit_buy_price_krw = 0.0
     binance_entry_price_krw = 0.0
     for rec in hedge_records:
@@ -146,5 +148,6 @@ def calculate_krw_entry_kimp(hedge_records):
         elif rec.exchange == "Upbit":
             upbit_buy_price_krw += rec.krw_price
 
-    KRW_entry_kimp = upbit_buy_price_krw - binance_entry_price_krw
-    return KRW_entry_kimp
+    entry_kimp_krw = upbit_buy_price_krw - binance_entry_price_krw
+    entry_kimp_percent = entry_kimp_krw / binance_entry_price_krw * 100
+    return (entry_kimp_krw, entry_kimp_percent)

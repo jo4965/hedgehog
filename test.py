@@ -6,6 +6,7 @@ from fastapi import BackgroundTasks
 from dotenv import load_dotenv
 from main import start_hedge
 from dto.models import HedgeData
+from main import request_one_dollar_into_krw
 load_dotenv()
 
 ENVIRON_BINANCE_KEY="BINANCE_KEY"
@@ -14,19 +15,20 @@ ENVIRON_UPBIT_KEY="UPBIT_KEY"
 ENVIRON_UPBIT_SECRET="UPBIT_SECRET"
 
 if __name__ == '__main__':
-
+    one_dollar_into_krw = request_one_dollar_into_krw()
+    print(one_dollar_into_krw, type(one_dollar_into_krw))
     # start_hedge("zenike", "BTC", "USDT.P", 0.003, "OFF", BackgroundTasks())
 
-    symbol = "BTCUSDT"
-    binance_client = BinanceFuturesClient(key=os.getenv(ENVIRON_BINANCE_KEY),
-                                          secret=os.getenv(ENVIRON_BINANCE_SECRET))
-    res = binance_client.query_order("BTC", 261724492140)
-    print(json.dumps(res))
-
-    upbit_client = UpbitClient(os.getenv(ENVIRON_UPBIT_KEY),
-                               os.getenv(ENVIRON_UPBIT_SECRET))
-    res = upbit_client.query_order("8adf8653-d6df-4a5f-9444-4c82089d1a0f")
-    print(json.dumps(res))
+    # symbol = "BTCUSDT"
+    # binance_client = BinanceFuturesClient(key=os.getenv(ENVIRON_BINANCE_KEY),
+    #                                       secret=os.getenv(ENVIRON_BINANCE_SECRET))
+    # res = binance_client.query_order("BTC", 261724492140)
+    # print(json.dumps(res))
+    #
+    # upbit_client = UpbitClient(os.getenv(ENVIRON_UPBIT_KEY),
+    #                            os.getenv(ENVIRON_UPBIT_SECRET))
+    # res = upbit_client.query_order("8adf8653-d6df-4a5f-9444-4c82089d1a0f")
+    # print(json.dumps(res))
     #
     # binance_client.create_order_with_conditions(symbol, "SELL", "MARKET", 0.003, leverage=10)
     # binance_client.cancel_order(symbol, 261724492140)

@@ -29,6 +29,7 @@ def parse_time(utc_timestamp):
     date = datetime.fromtimestamp(timestamp)
     return date.strftime("%y-%m-%d %H:%M:%S")
 
+
 def logger_test():
     date = parse_time(datetime.utcnow().timestamp())
     logger.info(date)
@@ -41,7 +42,6 @@ class LoggerWithDiscord:
         except Exception as e:
             print("웹훅 URL이 유효하지 않습니다: ", user_webhook_url)
 
-
     def log_message(self, message="None", embed: Embed = None):
         if self.discord_hook:
             if embed:
@@ -53,14 +53,14 @@ class LoggerWithDiscord:
             print(message)
 
     def log_hedge_on_message(self, exchange, base, quote,
-                          exchange_amount, upbit_amount,
-                          exchange_krw_price, upbit_krw_price,
-                          kimp):
+                             exchange_amount, upbit_amount,
+                             exchange_krw_price, upbit_krw_price,
+                             one_dollar_into_krw):
         date = parse_time(datetime.utcnow().timestamp())
         hedge_type = "헷지 시작"
         content = f"{hedge_type}: {base}\n{exchange}: {exchange_amount} UPBIT: {upbit_amount}"
         embed = Embed(title="헷지", description=content, color=0x0000FF)
-        embed.add_field(name="일시", value="20"+str(date), inline=False)
+        embed.add_field(name="일시", value="20" + str(date), inline=False)
         embed.add_field(name="거래소", value=f"{exchange}-UPBIT", inline=False)
         embed.add_field(name="심볼", value=f"{base}/{quote}-{base}/KRW", inline=False)
         embed.add_field(name="거래유형", value=hedge_type, inline=False)
@@ -76,22 +76,27 @@ class LoggerWithDiscord:
             inline=False,
         )
 
+        kimp_krw = upbit_krw_price - exchange_krw_price
+        kimp_percent = kimp_krw / exchange_krw_price * 100
+
         embed.add_field(
             name="김프",
-            value=f"헷지 시작시 김프: {round(kimp)}원",
+            value=f"헷지 시작시 김프: {round(kimp_percent, 2)}%, {round(kimp_krw)}원",
             inline=False,
         )
         self.log_message(content, embed)
 
     def log_hedge_off_message(self, exchange, base, quote,
-                          exchange_amount, upbit_amount,
-                          exchange_krw_price, upbit_krw_price,
-                          entry_kimp, close_kimp, profit_kimp):
+                              exchange_amount, upbit_amount,
+                              exchange_krw_price, upbit_krw_price,
+                              entry_kimp_krw, entry_kimp_percent,
+                              close_kimp_krw):
+
         date = parse_time(datetime.utcnow().timestamp())
         hedge_type = "헷지 종료"
         content = f"{hedge_type}: {base}\n{exchange}: {exchange_amount} UPBIT: {upbit_amount}"
         embed = Embed(title="헷지", description=content, color=0x0000FF)
-        embed.add_field(name="일시", value="20"+str(date), inline=False)
+        embed.add_field(name="일시", value="20" + str(date), inline=False)
         embed.add_field(name="거래소", value=f"{exchange}-UPBIT", inline=False)
         embed.add_field(name="심볼", value=f"{base}/{quote}-{base}/KRW", inline=False)
         embed.add_field(name="거래유형", value=hedge_type, inline=False)
@@ -107,9 +112,16 @@ class LoggerWithDiscord:
             inline=False,
         )
 
+        close_kimp_percent = close_kimp_krw / exchange_krw_price * 100
+
+        profit_kimp_krw = close_kimp_krw - entry_kimp_krw
+        profit_kimp_percent = close_kimp_percent - entry_kimp_percent
+
         embed.add_field(
             name="김프",
-            value=f"entry: {round(entry_kimp)}원\nclose: {round(close_kimp)}원\nprofit: {round(profit_kimp)}원",
+            value=f"entry: {round(entry_kimp_percent, 2)}%, {round(entry_kimp_krw)}원\n"
+                  f"close: {round(close_kimp_percent, 2)}%, {round(close_kimp_krw)}원\n"
+                  f"profit: {round(profit_kimp_percent, 2)}%, {round(profit_kimp_krw)}원\n",
             inline=False,
         )
         self.log_message(content, embed)
