@@ -58,27 +58,27 @@ class LoggerWithDiscord:
                           kimp):
         date = parse_time(datetime.utcnow().timestamp())
         hedge_type = "헷지 시작"
-        content = f"{hedge_type}: {base} ==> {exchange}:{exchange_amount} UPBIT:{upbit_amount}"
+        content = f"{hedge_type}: {base}\n{exchange}: {exchange_amount} UPBIT: {upbit_amount}"
         embed = Embed(title="헷지", description=content, color=0x0000FF)
-        embed.add_field(name="일시", value=str(date), inline=False)
+        embed.add_field(name="일시", value="20"+str(date), inline=False)
         embed.add_field(name="거래소", value=f"{exchange}-UPBIT", inline=False)
         embed.add_field(name="심볼", value=f"{base}/{quote}-{base}/KRW", inline=False)
         embed.add_field(name="거래유형", value=hedge_type, inline=False)
         embed.add_field(
             name="수량",
-            value=f"{exchange}:{exchange_amount} UPBIT:{upbit_amount}",
+            value=f"{exchange}: {exchange_amount}\nUPBIT: {upbit_amount}",
             inline=False,
         )
 
         embed.add_field(
             name="가격",
-            value=f"{exchange}:{exchange_krw_price}원\n UPBIT:{upbit_krw_price}원",
+            value=f"{exchange}: {round(exchange_krw_price)}원\n UPBIT: {round(upbit_krw_price)}원",
             inline=False,
         )
 
         embed.add_field(
             name="김프",
-            value=f"헷지 시작시 김프: {kimp}원",
+            value=f"헷지 시작시 김프: {round(kimp)}원",
             inline=False,
         )
         self.log_message(content, embed)
@@ -89,27 +89,27 @@ class LoggerWithDiscord:
                           entry_kimp, close_kimp, profit_kimp):
         date = parse_time(datetime.utcnow().timestamp())
         hedge_type = "헷지 종료"
-        content = f"{hedge_type}: {base} ==> {exchange}:{exchange_amount} UPBIT:{upbit_amount}"
+        content = f"{hedge_type}: {base}\n{exchange}: {exchange_amount} UPBIT: {upbit_amount}"
         embed = Embed(title="헷지", description=content, color=0x0000FF)
-        embed.add_field(name="일시", value=str(date), inline=False)
+        embed.add_field(name="일시", value="20"+str(date), inline=False)
         embed.add_field(name="거래소", value=f"{exchange}-UPBIT", inline=False)
         embed.add_field(name="심볼", value=f"{base}/{quote}-{base}/KRW", inline=False)
         embed.add_field(name="거래유형", value=hedge_type, inline=False)
         embed.add_field(
             name="수량",
-            value=f"{exchange}:{exchange_amount} UPBIT:{upbit_amount}",
+            value=f"{exchange}: {exchange_amount}\nUPBIT: {upbit_amount}",
             inline=False,
         )
 
         embed.add_field(
             name="가격",
-            value=f"{exchange}:{exchange_krw_price}원\nUPBIT:{upbit_krw_price}원",
+            value=f"{exchange}: {round(exchange_krw_price)}원\nUPBIT: {round(upbit_krw_price)}원",
             inline=False,
         )
 
         embed.add_field(
             name="김프",
-            value=f"entry: {entry_kimp}원\nclose: {close_kimp}원\nprofit: {profit_kimp}원",
+            value=f"entry: {round(entry_kimp)}원\nclose: {round(close_kimp)}원\nprofit: {round(profit_kimp)}원",
             inline=False,
         )
         self.log_message(content, embed)

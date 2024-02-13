@@ -129,7 +129,7 @@ def start_hedge(user_name, base, quote, amount, hedge, background_tasks: Backgro
         binance_short_usd = binance_short_res.cumQuote
 
         background_tasks.add_task(logger_with_discord.log_hedge_on_message,
-                                  "binance", base, quote,
+                                  "BINANCE", base, quote,
                                   amount,
                                   upbit_amount,
                                   binance_short_usd * 1350,
@@ -206,12 +206,12 @@ def start_hedge(user_name, base, quote, amount, hedge, background_tasks: Backgro
         hedge_adapter.clear_current_hedge(hedge_records)
 
         background_tasks.add_task(logger_with_discord.log_hedge_off_message,
-                                  "binance", base, quote,
+                                  "BINANCE", base, quote,
                                   binance_close_amount,
                                   upbit_amount,
                                   binance_close_price_usd * 1350,
                                   upbit_sell_price_krw,
-                                  round(entry_kimp_krw), round(close_kimp_krw), round(profit_kimp_krw))
+                                  entry_kimp_krw, close_kimp_krw, profit_kimp_krw)
 
         return {"result": "success"}
 
