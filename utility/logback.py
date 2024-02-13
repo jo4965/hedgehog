@@ -52,9 +52,12 @@ class LoggerWithDiscord:
             logger.info(message)
             print(message)
 
-    def log_hedge_message(self, exchange, base, quote, exchange_amount, upbit_amount, exchange_krw_price, upbit_krw_price, hedge):
+    def log_hedge_on_message(self, exchange, base, quote,
+                          exchange_amount, upbit_amount,
+                          exchange_krw_price, upbit_krw_price,
+                          kimp):
         date = parse_time(datetime.utcnow().timestamp())
-        hedge_type = "헷지" if hedge == "ON" else "헷지 종료"
+        hedge_type = "헷지 시작"
         content = f"{hedge_type}: {base} ==> {exchange}:{exchange_amount} UPBIT:{upbit_amount}"
         embed = Embed(title="헷지", description=content, color=0x0000FF)
         embed.add_field(name="일시", value=str(date), inline=False)
@@ -70,6 +73,43 @@ class LoggerWithDiscord:
         embed.add_field(
             name="가격",
             value=f"{exchange}:{exchange_krw_price}원\n UPBIT:{upbit_krw_price}원",
+            inline=False,
+        )
+
+        embed.add_field(
+            name="김프",
+            value=f"헷지 시작시 김프: {kimp}원",
+            inline=False,
+        )
+        self.log_message(content, embed)
+
+    def log_hedge_off_message(self, exchange, base, quote,
+                          exchange_amount, upbit_amount,
+                          exchange_krw_price, upbit_krw_price,
+                          entry_kimp, close_kimp, profit_kimp):
+        date = parse_time(datetime.utcnow().timestamp())
+        hedge_type = "헷지 종료"
+        content = f"{hedge_type}: {base} ==> {exchange}:{exchange_amount} UPBIT:{upbit_amount}"
+        embed = Embed(title="헷지", description=content, color=0x0000FF)
+        embed.add_field(name="일시", value=str(date), inline=False)
+        embed.add_field(name="거래소", value=f"{exchange}-UPBIT", inline=False)
+        embed.add_field(name="심볼", value=f"{base}/{quote}-{base}/KRW", inline=False)
+        embed.add_field(name="거래유형", value=hedge_type, inline=False)
+        embed.add_field(
+            name="수량",
+            value=f"{exchange}:{exchange_amount} UPBIT:{upbit_amount}",
+            inline=False,
+        )
+
+        embed.add_field(
+            name="가격",
+            value=f"{exchange}:{exchange_krw_price}원\nUPBIT:{upbit_krw_price}원",
+            inline=False,
+        )
+
+        embed.add_field(
+            name="김프",
+            value=f"entry: {entry_kimp}원\nclose: {close_kimp}원\nprofit: {profit_kimp}원",
             inline=False,
         )
         self.log_message(content, embed)

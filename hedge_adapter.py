@@ -13,6 +13,7 @@ def find_apikey_by_user_name(user_name: str):
 
     return None
 
+
 """
     rec.user_name,
     rec.discord_webhook_key
@@ -122,8 +123,21 @@ def clear_current_hedge(records):
         pocket.delete("current_hedge", rec.id)
 
 
-def calculate_and_save_profit(user_name, base, leverage, amount, upbit_sell_price_krw, binance_close_price_krw,
-                              hedge_records):
+def calculate_and_save_profit(user_name, base, leverage, amount,
+                              entry_kimp_krw, close_kimp_krw, profit_kimp_krw):
+    pocket.create("profit",
+                  {
+                      "user_name": user_name,
+                      "base": base,
+                      "leverage": leverage,
+                      "amount": amount,
+                      "KRW_entry_kimp": round(entry_kimp_krw),
+                      "KRW_close_kimp": round(close_kimp_krw),
+                      "KRW_kimp_profit": round(profit_kimp_krw),
+                  })
+
+
+def calculate_krw_entry_kimp(hedge_records):
     upbit_buy_price_krw = 0.0
     binance_entry_price_krw = 0.0
     for rec in hedge_records:
@@ -133,15 +147,4 @@ def calculate_and_save_profit(user_name, base, leverage, amount, upbit_sell_pric
             upbit_buy_price_krw += rec.krw_price
 
     KRW_entry_kimp = upbit_buy_price_krw - binance_entry_price_krw
-    KRW_close_kimp = upbit_sell_price_krw - binance_close_price_krw
-
-    pocket.create("profit",
-                  {
-                      "user_name": user_name,
-                      "base": base,
-                      "leverage": leverage,
-                      "amount": amount,
-                      "KRW_entry_kimp": round(KRW_entry_kimp),
-                      "KRW_close_kimp": round(KRW_close_kimp),
-                      "KRW_kimp_profit": round(KRW_close_kimp - KRW_entry_kimp),
-                  })
+    return KRW_entry_kimp

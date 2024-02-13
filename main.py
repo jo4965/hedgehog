@@ -88,9 +88,11 @@ async def hedge(hedge_data: HedgeData, background_tasks: BackgroundTasks):
 
 def start_hedge(user_name, base, quote, amount, hedge, background_tasks: BackgroundTasks):
     user_info = hedge_adapter.find_apikey_by_user_name(user_name)
+
     if user_info is None:
         background_tasks.add_task(admin_logger.log_error_message,
-                                  "No matching data for username: %s " % user_name)
+                                  "No matching data for username: %s " % user_name,
+                                  "Request Body")
         return create_default_error()
 
     logger_with_discord = LoggerWithDiscord(user_info.discord_webhook_key)
@@ -126,13 +128,13 @@ def start_hedge(user_name, base, quote, amount, hedge, background_tasks: Backgro
         upbit_buy_krw = float(upbit_buy_res.get("price"))
         binance_short_usd = binance_short_res.cumQuote
 
-        background_tasks.add_task(logger_with_discord.log_hedge_message,
+        background_tasks.add_task(logger_with_discord.log_hedge_on_message,
                                   "binance", base, quote,
                                   amount,
                                   upbit_amount,
-                                  upbit_buy_krw,
                                   binance_short_usd * 1350,
-                                  hedge)
+                                  upbit_buy_krw,
+                                  upbit_buy_krw - (binance_short_usd * 1350))
 
         return {"result": "success"}
 
@@ -149,14 +151,16 @@ def start_hedge(user_name, base, quote, amount, hedge, background_tasks: Backgro
                 upbit_amount += rec.amount
             else:
                 background_tasks.add_task(admin_logger.log_error_message,
-                                          "Not available exchange name: %s " % rec.exchange)
+                                          "Not available exchange name: %s " % rec.exchange,
+                                          "DB Exchange Name")
                 background_tasks.add_task(logger_with_discord.log_error_message,
-                                          "Not available exchange name: %s " % rec.exchange)
+                                          "Not available exchange name: %s " % rec.exchange,
+                                          "DB Exchange Name")
                 return create_default_error()
 
         if upbit_amount == 0 or binance_amount == 0:
-            background_tasks.add_task(logger_with_discord.log_message(
-                "종료할 수량이 없습니다. Upbit: %d, Binance: %d" % (upbit_amount, binance_amount)))
+            background_tasks.add_task(logger_with_discord.log_message,
+                                      "종료할 수량이 없습니다. Upbit: %d, Binance: %d" % (upbit_amount, binance_amount))
             return create_default_error()
 
         binance_client = BinanceFuturesClient(user_info.binance_api_key,
@@ -187,21 +191,27 @@ def start_hedge(user_name, base, quote, amount, hedge, background_tasks: Backgro
             upbit_sell_price_krw += float(trade.get("funds"))
 
         binance_close_price_usd = binance_close_res.cumQuote
+        binance_close_price_krw = binance_close_price_usd * 1350
         binance_close_amount = binance_close_res.origQty
 
+        entry_kimp_krw = hedge_adapter.calculate_krw_entry_kimp(hedge_records)
+        close_kimp_krw = upbit_sell_price_krw - binance_close_price_krw
+        profit_kimp_krw = close_kimp_krw - entry_kimp_krw
+
         hedge_adapter.calculate_and_save_profit(user_name, base, user_info.binance_leverage, binance_amount,
-                                                upbit_sell_price_krw,
-                                                binance_close_price_usd * 1350,
-                                                hedge_records)
+                                                entry_kimp_krw,
+                                                close_kimp_krw,
+                                                profit_kimp_krw)
+
         hedge_adapter.clear_current_hedge(hedge_records)
 
-        background_tasks.add_task(logger_with_discord.log_hedge_message,
+        background_tasks.add_task(logger_with_discord.log_hedge_off_message,
                                   "binance", base, quote,
                                   binance_close_amount,
                                   upbit_amount,
                                   binance_close_price_usd * 1350,
                                   upbit_sell_price_krw,
-                                  hedge)
+                                  round(entry_kimp_krw), round(close_kimp_krw), round(profit_kimp_krw))
 
         return {"result": "success"}
 
