@@ -142,7 +142,7 @@ def enter_hedge(user_name, base, quote, amount, background_tasks):
     return {"result": "success"}
 
 
-def close_hedge(user_name, base, quote, amount, background_tasks):
+def close_hedge(user_name, base, quote, background_tasks):
     user_info = hedge_adapter.find_apikey_by_user_name(user_name)
 
     if user_info is None:
@@ -152,6 +152,7 @@ def close_hedge(user_name, base, quote, amount, background_tasks):
         return create_default_error()
 
     logger_with_discord = LoggerWithDiscord(user_info.discord_webhook_key)
+    
     hedge_records = hedge_adapter.find_hedge_by_user_name(user_name)
 
     upbit_amount = 0
