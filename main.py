@@ -12,6 +12,7 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.exception_handlers import request_validation_exception_handler
 import os
 import requests
+import math
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -19,6 +20,10 @@ load_dotenv()
 VERSION = "beta"
 app = FastAPI(default_response_class=ORJSONResponse)
 admin_logger = LoggerWithDiscord(os.getenv("DISCORD_WEBHOOK_URL"))
+
+
+def floor_with_precision(number, precision):
+    return math.floor(number * (10 ** precision)) / 10 ** precision
 
 
 def request_one_dollar_into_krw():
@@ -97,6 +102,8 @@ def enter_hedge(user_name, base, quote, amount, background_tasks):
                                   "No matching data for username: %s " % user_name,
                                   "Request Body")
         return create_default_error()
+
+    amount = floor_with_precision(amount, 3)
 
     logger_with_discord = LoggerWithDiscord(user_info.discord_webhook_key)
 

@@ -15,9 +15,10 @@ ENVIRON_UPBIT_KEY="UPBIT_KEY"
 ENVIRON_UPBIT_SECRET="UPBIT_SECRET"
 
 if __name__ == '__main__':
-    one_dollar_into_krw = request_one_dollar_into_krw()
-    print(one_dollar_into_krw, type(one_dollar_into_krw))
-    # start_hedge("zenike", "BTC", "USDT.P", 0.003, "OFF", BackgroundTasks())
+    # one_dollar_into_krw = request_one_dollar_into_krw()
+    # print(one_dollar_into_krw, type(one_dollar_into_krw))
+    start_hedge("zenike", "BTC", "USDT.P", round(0.015141, 5), "ON", BackgroundTasks())
+    # start_hedge("zenike", "BTC", "USDT.P", round(0.015141, 5), "OFF", BackgroundTasks())
 
     # symbol = "BTCUSDT"
     # binance_client = BinanceFuturesClient(key=os.getenv(ENVIRON_BINANCE_KEY),
