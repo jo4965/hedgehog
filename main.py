@@ -3,7 +3,7 @@ from exchange import UpbitClient, BinanceFuturesClient, OrderState
 from utility.logback import LoggerWithDiscord
 from dto.models import HedgeData
 import hedge_adapter
-
+import time
 import ipaddress
 import traceback
 from fastapi import FastAPI, Request, status, BackgroundTasks
@@ -125,6 +125,7 @@ def enter_hedge(user_name, base, quote, amount, background_tasks):
                                                   binance_short_res,
                                                   one_dollar_into_krw)
 
+    # Upbit buy
     upbit_client = UpbitClient(user_info.upbit_api_key,
                                user_info.upbit_api_secret)
 
@@ -159,7 +160,7 @@ def close_hedge(user_name, base, quote, background_tasks):
         return create_default_error()
 
     logger_with_discord = LoggerWithDiscord(user_info.discord_webhook_key)
-    
+
     hedge_records = hedge_adapter.find_hedge_by_user_name(user_name)
 
     upbit_amount = 0
@@ -203,9 +204,17 @@ def close_hedge(user_name, base, quote, background_tasks):
     upbit_client = UpbitClient(user_info.upbit_api_key,
                                user_info.upbit_api_secret)
 
-    upbit_sell_res = upbit_client.request_sell_order(base, upbit_amount)
-    if not OrderState.is_order_completed(upbit_sell_res):
-        upbit_sell_res = upbit_client.wait_until_order_done(upbit_sell_res)
+    while True:
+        try:
+            upbit_sell_res = upbit_client.request_sell_order(base, upbit_amount)
+            if not OrderState.is_order_completed(upbit_sell_res):
+                upbit_sell_res = upbit_client.wait_until_order_done(upbit_sell_res)
+
+            break
+        except Exception as e:
+            background_tasks.add_task(logger_with_discord.log_message,
+                                      "업비트 매도에 실패했습니다. 재시도 합니다.\n 에러: %s" % str(e))
+            time.sleep(0.5)
 
     hedge_adapter.save_close_history_from_upbit(user_name, base, upbit_sell_res, one_dollar_into_krw)
 
