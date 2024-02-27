@@ -2,6 +2,9 @@
 #/bin/bash
 
 set -e
+ufw allow 80/tcp
+ufw allow 8090/tcp
+
 arch=$(uname -m)
 
 case $arch in
