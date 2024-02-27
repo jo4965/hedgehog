@@ -72,7 +72,7 @@ class LoggerWithDiscord:
 
         embed.add_field(
             name="가격",
-            value=f"{exchange}: {round(exchange_krw_price)}원\nUPBIT: {round(upbit_krw_price)}원",
+            value=f"{exchange}: {round(exchange_krw_price)}원\nUPBIT: {round(upbit_krw_price * 1.0005)}원",
             inline=False,
         )
 
@@ -113,14 +113,15 @@ class LoggerWithDiscord:
         )
 
         close_kimp_percent = close_kimp_krw / exchange_krw_price * 100
-
-        profit_kimp_krw = close_kimp_krw - entry_kimp_krw
         profit_kimp_percent = close_kimp_percent - entry_kimp_percent
+
+        close_kimp_krw_with_fee = upbit_krw_price * 0.9995 - exchange_krw_price
+        profit_kimp_krw = close_kimp_krw_with_fee - entry_kimp_krw
 
         embed.add_field(
             name="김프",
             value=f"entry: {round(entry_kimp_percent, 2)}%, {round(entry_kimp_krw)}원\n"
-                  f"close: {round(close_kimp_percent, 2)}%, {round(close_kimp_krw)}원\n"
+                  f"close: {round(close_kimp_percent, 2)}%, {round(close_kimp_krw_with_fee)}원\n"
                   f"profit: {round(profit_kimp_percent, 2)}%, {round(profit_kimp_krw)}원\n",
             inline=False,
         )

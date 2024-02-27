@@ -67,17 +67,17 @@ def save_history(user_name: str,
 
 def save_current_hedge_from_upbit(user_name, base, upbit_response, one_dollar_into_krw: float):
     bought_amount = float(upbit_response.get("executed_volume"))
-    bought_price_krw = float(upbit_response.get("price"))
+    bought_price_krw = float(upbit_response.get("price")) * 1.0005
 
     save_current_hedge(user_name, base, "Upbit",
                        bought_amount,
                        round(bought_price_krw),
-                       round(bought_price_krw / one_dollar_into_krw))  # dollar exchange
+                       round(bought_price_krw / one_dollar_into_krw, 2))  # dollar exchange
 
     save_history(user_name, base, "Upbit", 1, "entry",
                  bought_amount,
                  round(bought_price_krw),
-                 round(bought_price_krw / one_dollar_into_krw))  # dollar exchange
+                 round(bought_price_krw / one_dollar_into_krw, 2))  # dollar exchange
 
 
 def save_current_hedge_from_binance(user_name, base, leverage, binance_response: OrderResponse,
@@ -88,12 +88,12 @@ def save_current_hedge_from_binance(user_name, base, leverage, binance_response:
     save_current_hedge(user_name, base, "Binance",
                        bought_amount,
                        round(bought_price_usd * one_dollar_into_krw),
-                       round(bought_price_usd))  # dollar exchange
+                       round(bought_price_usd, 2))  # dollar exchange
 
     save_history(user_name, base, "Binance", leverage, "entry",
                  bought_amount,
                  round(bought_price_usd * one_dollar_into_krw),
-                 round(bought_price_usd))  # dollar exchange
+                 round(bought_price_usd, 2))  # dollar exchange
 
 
 def save_close_history_from_upbit(user_name, base, upbit_response, one_dollar_into_krw):
@@ -103,10 +103,11 @@ def save_close_history_from_upbit(user_name, base, upbit_response, one_dollar_in
     for trade in upbit_response.get("trades"):
         sell_price_krw += float(trade.get("funds"))
 
+    sell_price_krw *= 0.9995
     save_history(user_name, base, "Upbit", 1, "close",
                  sell_amount,
                  round(sell_price_krw),
-                 round(sell_price_krw / one_dollar_into_krw))  # dollar exchange
+                 round(sell_price_krw / one_dollar_into_krw, 2))  # dollar exchange
 
 
 def save_close_history_from_binance(user_name, base, leverage, binance_response: OrderResponse,
@@ -117,7 +118,7 @@ def save_close_history_from_binance(user_name, base, leverage, binance_response:
     save_history(user_name, base, "Binance", leverage, "close",
                  close_amount,
                  round(close_price_usd * one_dollar_into_krw),
-                 round(close_price_usd))  # dollar exchange
+                 round(close_price_usd, 2))  # dollar exchange
 
 
 def clear_current_hedge(records):
@@ -149,5 +150,5 @@ def calculate_entry_kimp(hedge_records):
             upbit_buy_price_krw += rec.krw_price
 
     entry_kimp_krw = upbit_buy_price_krw - binance_entry_price_krw
-    entry_kimp_percent = entry_kimp_krw / binance_entry_price_krw * 100
+    entry_kimp_percent = (upbit_buy_price_krw / 1.0005 - binance_entry_price_krw) / binance_entry_price_krw * 100
     return (entry_kimp_krw, entry_kimp_percent)
