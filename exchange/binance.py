@@ -133,9 +133,12 @@ class BinanceFuturesClient:
 
     def wait_until_order_done(self, response: OrderResponse):
         while True:
-            query_res = self.query_order(response.symbol,
-                                         response.orderId)
-            if query_res.status == "FILLED":
-                return query_res
-            else:
+            try:
+                query_res = self.query_order(response.symbol,
+                                             response.orderId)
+                if query_res.status == "FILLED":
+                    return query_res
+                else:
+                    time.sleep(0.5)
+            except Exception as e:
                 time.sleep(0.5)
