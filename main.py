@@ -217,9 +217,11 @@ def close_hedge(user_name, base, quote, background_tasks):
     entry_kimp_krw, entry_kimp_percent = hedge_adapter.calculate_entry_kimp(hedge_records)
     close_kimp_krw = upbit_sell_price_krw - binance_close_price_krw
 
+    close_kimp_krw_with_fee = upbit_sell_price_krw * 0.9995 - binance_close_price_krw
+
     hedge_adapter.calculate_and_save_profit(user_name, base, user_info.binance_leverage, binance_amount,
                                             entry_kimp_krw,
-                                            close_kimp_krw)
+                                            close_kimp_krw_with_fee)
 
     hedge_adapter.clear_current_hedge(hedge_records)
 

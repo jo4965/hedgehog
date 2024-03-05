@@ -151,4 +151,5 @@ def calculate_entry_kimp(hedge_records):
 
     entry_kimp_krw = upbit_buy_price_krw - binance_entry_price_krw
     entry_kimp_percent = (upbit_buy_price_krw / 1.0005 - binance_entry_price_krw) / binance_entry_price_krw * 100
+
     return (entry_kimp_krw, entry_kimp_percent)
