@@ -262,9 +262,13 @@ async def hedge(hedge_data: HedgeData, background_tasks: BackgroundTasks):
 
     # ON or OFF
     hedge = hedge_data.hedge
+    try:
+        return start_hedge(user_name, base, quote, amount, hedge, background_tasks)
+    except Exception as e:
+        background_tasks.add_task(admin_logger.log_error_message,
+                                  "Unknown error: %s " % str(e))
+        return create_default_error()
 
-    result = start_hedge(user_name, base, quote, amount, hedge, background_tasks)
-    return result
 
 
 def start_hedge(user_name, base, quote, amount, hedge, background_tasks: BackgroundTasks):
