@@ -81,6 +81,7 @@ def create_default_error():
         "result": "error"
     }
 
+
 def enter_hedge(user_name, base, quote, amount, background_tasks):
     user_info = hedge_adapter.find_apikey_by_user_name(user_name)
 
