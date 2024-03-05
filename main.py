@@ -81,19 +81,6 @@ def create_default_error():
         "result": "error"
     }
 
-
-def create_discord_logger_from_user_name(user_name, background_tasks):
-    user_info = hedge_adapter.find_apikey_by_user_name(user_name)
-
-    if user_info is None:
-        background_tasks.add_task(admin_logger.log_error_message,
-                                  "No matching data for username: %s " % user_name,
-                                  "Request Body")
-        return create_default_error()
-
-    return LoggerWithDiscord(user_info.discord_webhook_key)
-
-
 def enter_hedge(user_name, base, quote, amount, background_tasks):
     user_info = hedge_adapter.find_apikey_by_user_name(user_name)
 
@@ -262,13 +249,13 @@ async def hedge(hedge_data: HedgeData, background_tasks: BackgroundTasks):
 
     # ON or OFF
     hedge = hedge_data.hedge
+
     try:
         return start_hedge(user_name, base, quote, amount, hedge, background_tasks)
     except Exception as e:
         background_tasks.add_task(admin_logger.log_error_message,
                                   "Unknown error: %s " % str(e))
         return create_default_error()
-
 
 
 def start_hedge(user_name, base, quote, amount, hedge, background_tasks: BackgroundTasks):
