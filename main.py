@@ -14,6 +14,8 @@ import os
 import requests
 import math
 from dotenv import load_dotenv
+import sys
+import traceback
 
 load_dotenv()
 
@@ -256,8 +258,12 @@ async def hedge(hedge_data: HedgeData, background_tasks: BackgroundTasks):
     try:
         return start_hedge(user_name, base, quote, amount, hedge, background_tasks)
     except Exception as e:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
         background_tasks.add_task(admin_logger.log_error_message,
-                                  "Unknown error: %s " % str(e))
+                                  "Unknown error: %s %s" % (str(e), traceback.format_exc()),
+                                  "Unknown error")
+
         return create_default_error()
 
 
