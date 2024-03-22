@@ -131,7 +131,7 @@ def enter_hedge(user_name, base, quote, amount, background_tasks):
     binance_short_usd = binance_short_res.cumQuote
 
     background_tasks.add_task(logger_with_discord.log_hedge_on_message,
-                              "BINANCE", base, quote,
+                              "BINANCE",
                               amount, upbit_amount,
                               binance_short_usd * one_dollar_into_krw,
                               upbit_buy_krw,
@@ -155,12 +155,17 @@ def close_hedge(user_name, base, quote, background_tasks):
 
     upbit_amount = 0
     binance_amount = 0
+    upbit_buy_price_krw = 0.0
+    # binance_entry_price_krw = 0.0 사용 X 매도 시점에 환율 다시 계산해야 함
+    binance_entry_price_usd = 0.0
 
     for rec in hedge_records:
         if rec.exchange == "Binance":
             binance_amount += rec.amount
+            binance_entry_price_usd += rec.usd_price
         elif rec.exchange == "Upbit":
             upbit_amount += rec.amount
+            upbit_buy_price_krw += rec.krw_price
         else:
             background_tasks.add_task(admin_logger.log_error_message,
                                       "Not available exchange name: %s " % rec.exchange,
@@ -216,7 +221,7 @@ def close_hedge(user_name, base, quote, background_tasks):
     binance_close_price_krw = binance_close_price_usd * one_dollar_into_krw
     binance_close_amount = binance_close_res.origQty
 
-    entry_kimp_krw, entry_kimp_percent = hedge_adapter.calculate_entry_kimp(hedge_records)
+    entry_kimp_krw, entry_kimp_percent = hedge_adapter.calculate_entry_kimp(upbit_buy_price_krw, binance_entry_price_usd * one_dollar_into_krw)
     close_kimp_krw = upbit_sell_price_krw - binance_close_price_krw
 
     close_kimp_krw_with_fee = upbit_sell_price_krw * 0.9995 - binance_close_price_krw
@@ -228,13 +233,16 @@ def close_hedge(user_name, base, quote, background_tasks):
     hedge_adapter.clear_current_hedge(hedge_records)
 
     background_tasks.add_task(logger_with_discord.log_hedge_off_message,
-                              "BINANCE", base, quote,
+                              "BINANCE",
                               binance_close_amount,
                               upbit_amount,
+                              binance_entry_price_usd * one_dollar_into_krw,
+                              upbit_buy_price_krw,
                               binance_close_price_krw,
                               upbit_sell_price_krw,
                               entry_kimp_krw, entry_kimp_percent,
-                              close_kimp_krw)
+                              close_kimp_krw,
+                              one_dollar_into_krw)
 
     return {"result": "success"}
 

@@ -140,15 +140,7 @@ def calculate_and_save_profit(user_name, base, leverage, amount,
                   })
 
 
-def calculate_entry_kimp(hedge_records):
-    upbit_buy_price_krw = 0.0
-    binance_entry_price_krw = 0.0
-    for rec in hedge_records:
-        if rec.exchange == "Binance":
-            binance_entry_price_krw += rec.krw_price
-        elif rec.exchange == "Upbit":
-            upbit_buy_price_krw += rec.krw_price
-
+def calculate_entry_kimp(upbit_buy_price_krw: float, binance_entry_price_krw: float):
     entry_kimp_krw = upbit_buy_price_krw - binance_entry_price_krw
     entry_kimp_percent = (upbit_buy_price_krw / 1.0005 - binance_entry_price_krw) / binance_entry_price_krw * 100
 

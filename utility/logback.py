@@ -52,18 +52,15 @@ class LoggerWithDiscord:
             logger.info(message)
             print(message)
 
-    def log_hedge_on_message(self, exchange, base, quote,
+    def log_hedge_on_message(self, exchange,
                              exchange_amount, upbit_amount,
                              exchange_krw_price, upbit_krw_price,
                              one_dollar_into_krw):
         date = parse_time(datetime.utcnow().timestamp())
-        hedge_type = "헷지 시작"
-        content = f"{hedge_type}: {base}\n{exchange}: {exchange_amount} UPBIT: {upbit_amount}"
-        embed = Embed(title="헷지", description=content, color=0x0000FF)
+        embed = Embed(title="헷지 시작", description="", color=0x0000FF)
         embed.add_field(name="일시", value="20" + str(date), inline=False)
-        embed.add_field(name="거래소", value=f"{exchange}-UPBIT", inline=False)
-        embed.add_field(name="심볼", value=f"{base}/{quote}-{base}/KRW", inline=False)
-        embed.add_field(name="거래유형", value=hedge_type, inline=False)
+        embed.add_field(name="환율", value=f"{one_dollar_into_krw}원", inline=False)
+
         embed.add_field(
             name="수량",
             value=f"{exchange}: {exchange_amount}\nUPBIT: {upbit_amount}",
@@ -84,22 +81,20 @@ class LoggerWithDiscord:
             value=f"헷지 시작시 김프: {round(kimp_percent, 2)}%, {round(kimp_krw)}원",
             inline=False,
         )
-        self.log_message(content, embed)
+        self.log_message("nothing", embed)
 
-    def log_hedge_off_message(self, exchange, base, quote,
+    def log_hedge_off_message(self, exchange,
                               exchange_amount, upbit_amount,
-                              exchange_krw_price, upbit_krw_price,
-                              entry_kimp_krw, entry_kimp_percent,
-                              close_kimp_krw):
+                              exchange_entry_krw_price, upbit_entry_krw_price,
+                              exchange_close_krw_price, upbit_close_krw_price,
+                              entry_kimp_krw, entry_kimp_percent, close_kimp_krw,
+                              one_dollar_into_krw):
 
         date = parse_time(datetime.utcnow().timestamp())
-        hedge_type = "헷지 종료"
-        content = f"{hedge_type}: {base}\n{exchange}: {exchange_amount} UPBIT: {upbit_amount}"
-        embed = Embed(title="헷지", description=content, color=0x0000FF)
+        embed = Embed(title="헷지 종료", description="", color=0x0000FF)
         embed.add_field(name="일시", value="20" + str(date), inline=False)
-        embed.add_field(name="거래소", value=f"{exchange}-UPBIT", inline=False)
-        embed.add_field(name="심볼", value=f"{base}/{quote}-{base}/KRW", inline=False)
-        embed.add_field(name="거래유형", value=hedge_type, inline=False)
+        embed.add_field(name="환율", value=f"{one_dollar_into_krw}원", inline=False)
+
         embed.add_field(
             name="수량",
             value=f"{exchange}: {exchange_amount}\nUPBIT: {upbit_amount}",
@@ -107,15 +102,21 @@ class LoggerWithDiscord:
         )
 
         embed.add_field(
-            name="가격",
-            value=f"{exchange}: {round(exchange_krw_price)}원\nUPBIT: {round(upbit_krw_price)}원",
+            name="Entry 가격",
+            value=f"{exchange}: {round(exchange_entry_krw_price)}원\nUPBIT: {round(upbit_entry_krw_price)}원",
             inline=False,
         )
 
-        close_kimp_percent = close_kimp_krw / exchange_krw_price * 100
+        embed.add_field(
+            name="Close 가격",
+            value=f"{exchange}: {round(exchange_close_krw_price)}원\nUPBIT: {round(upbit_close_krw_price)}원",
+            inline=False,
+        )
+
+        close_kimp_percent = close_kimp_krw / exchange_close_krw_price * 100
         profit_kimp_percent = close_kimp_percent - entry_kimp_percent
 
-        close_kimp_krw_with_fee = upbit_krw_price * 0.9995 - exchange_krw_price
+        close_kimp_krw_with_fee = upbit_close_krw_price * 0.9995 - exchange_close_krw_price
         profit_kimp_krw = close_kimp_krw_with_fee - entry_kimp_krw
 
         embed.add_field(
@@ -125,7 +126,7 @@ class LoggerWithDiscord:
                   f"profit: {round(profit_kimp_percent, 2)}%, {round(profit_kimp_krw)}원\n",
             inline=False,
         )
-        self.log_message(content, embed)
+        self.log_message("nothing", embed)
 
     def log_error_message(self, error, name):
         embed = Embed(title=f"{name} 에러", description=f"[{name} 에러가 발생했습니다]\n{error}", color=0xFF0000)
