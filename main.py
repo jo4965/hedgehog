@@ -120,9 +120,18 @@ def enter_hedge(user_name, base, quote, amount, background_tasks):
                                user_info.upbit_api_secret)
 
     # upbit_buy_res = upbit_client.request_buy_order(base, user_info.krw_amount_to_buy)
-    upbit_buy_res = upbit_client.request_order_with_amount(base, "BUY", amount)
-    if not OrderState.is_order_completed(upbit_buy_res):
-        upbit_buy_res = upbit_client.wait_until_order_done(upbit_buy_res)
+    while True:
+        try:
+            upbit_buy_res = upbit_client.request_order_with_amount(base, "BUY", amount)
+            if not OrderState.is_order_completed(upbit_buy_res):
+                upbit_buy_res = upbit_client.wait_until_order_done(upbit_buy_res)
+
+            break
+        except Exception as e:
+            background_tasks.add_task(logger_with_discord.log_message,
+                                      "업비트 매수에 실패했습니다. 재시도 합니다.\n 에러: %s\n Traceback: %s" % (str(e), traceback.format_exc()))
+            time.sleep(1)
+
 
     hedge_adapter.save_current_hedge_from_upbit(user_name, base, upbit_buy_res, one_dollar_into_krw)
 
@@ -208,8 +217,8 @@ def close_hedge(user_name, base, quote, background_tasks):
             break
         except Exception as e:
             background_tasks.add_task(logger_with_discord.log_message,
-                                      "업비트 매도에 실패했습니다. 재시도 합니다.\n 에러: %s" % str(e))
-            time.sleep(0.5)
+                                      "업비트 매도에 실패했습니다. 재시도 합니다.\n 에러: %s\n Traceback: %s" % (str(e), traceback.format_exc()))
+            time.sleep(1)
 
     hedge_adapter.save_close_history_from_upbit(user_name, base, upbit_sell_res, one_dollar_into_krw)
 
