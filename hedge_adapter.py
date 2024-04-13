@@ -96,18 +96,12 @@ def save_current_hedge_from_binance(user_name, base, leverage, binance_response:
                  round(bought_price_usd, 2))  # dollar exchange
 
 
-def save_close_history_from_upbit(user_name, base, upbit_response, one_dollar_into_krw):
-    sell_amount = float(upbit_response.get("executed_volume"))
-    sell_price_krw = 0.0
-
-    for trade in upbit_response.get("trades"):
-        sell_price_krw += float(trade.get("funds"))
-
-    sell_price_krw *= 0.9995
+def save_close_history_from_upbit(user_name, base, upbit_sold_amount, upbit_sold_krw, one_dollar_into_krw):
+    upbit_sold_krw *= 0.9995
     save_history(user_name, base, "Upbit", 1, "close",
-                 sell_amount,
-                 round(sell_price_krw),
-                 round(sell_price_krw / one_dollar_into_krw, 2))  # dollar exchange
+                 upbit_sold_amount,
+                 round(upbit_sold_krw),
+                 round(upbit_sold_krw / one_dollar_into_krw, 2))  # dollar exchange
 
 
 def save_close_history_from_binance(user_name, base, leverage, binance_response: OrderResponse,

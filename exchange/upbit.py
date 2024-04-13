@@ -16,6 +16,18 @@ def get_current_price(symbol) -> float:
     return pyupbit.get_current_price(symbol)
 
 
+def calculate_sell_krw_from_res(sell_response):
+    sell_price_krw = 0.0
+    for trade in sell_response.get("trades"):
+        sell_price_krw += float(trade.get("funds"))
+
+    return sell_price_krw
+
+
+def get_sold_amount_from_res(sell_response):
+    return float(sell_response.get("executed_volume"))
+
+
 class UpbitClient:
     FEE = 0.0001
 
@@ -69,6 +81,35 @@ class UpbitClient:
                 return query_res
             else:
                 time.sleep(0.5)
+
+    # 0.1개 보다 크면 0.1개씩 쪼개서 팝니다.
+    def split_request_sell_order(self, symbol, amount):
+        leftover = amount
+        split_amount = 0.1
+        sold_amount = 0.0
+        sold_price_krw = 0.0
+        while leftover > 0.0:
+            if leftover < split_amount:
+                amount_to_sell = leftover
+            else:
+                amount_to_sell = split_amount
+
+            while True:
+                try:
+                    upbit_sell_res = self.request_sell_order(symbol, amount_to_sell)
+                    if not OrderState.is_order_completed(upbit_sell_res):
+                        upbit_sell_res = self.wait_until_order_done(upbit_sell_res)
+
+                    sold_amount += get_sold_amount_from_res(upbit_sell_res)
+                    sold_price_krw += calculate_sell_krw_from_res(upbit_sell_res)
+                    break
+                except Exception as e:
+                    time.sleep(1)
+
+            leftover -= split_amount
+
+        return sold_amount, sold_price_krw
+
 
 
 class OrderState(Enum):

@@ -208,23 +208,8 @@ def close_hedge(user_name, base, quote, background_tasks):
     upbit_client = UpbitClient(user_info.upbit_api_key,
                                user_info.upbit_api_secret)
 
-    while True:
-        try:
-            upbit_sell_res = upbit_client.request_sell_order(base, upbit_amount)
-            if not OrderState.is_order_completed(upbit_sell_res):
-                upbit_sell_res = upbit_client.wait_until_order_done(upbit_sell_res)
-
-            break
-        except Exception as e:
-            background_tasks.add_task(logger_with_discord.log_message,
-                                      "업비트 매도에 실패했습니다. 재시도 합니다.\n 에러: %s\n Traceback: %s" % (str(e), traceback.format_exc()))
-            time.sleep(1)
-
-    hedge_adapter.save_close_history_from_upbit(user_name, base, upbit_sell_res, one_dollar_into_krw)
-
-    upbit_sell_price_krw = 0
-    for trade in upbit_sell_res.get("trades"):
-        upbit_sell_price_krw += float(trade.get("funds"))
+    upbit_sold_amount, upbit_sell_price_krw = upbit_client.split_request_sell_order(base, upbit_amount)
+    hedge_adapter.save_close_history_from_upbit(user_name, base, upbit_sold_amount, upbit_sell_price_krw, one_dollar_into_krw)
 
     binance_close_price_usd = binance_close_res.cumQuote
     binance_close_price_krw = binance_close_price_usd * one_dollar_into_krw
@@ -244,7 +229,7 @@ def close_hedge(user_name, base, quote, background_tasks):
     background_tasks.add_task(logger_with_discord.log_hedge_off_message,
                               "BINANCE",
                               binance_close_amount,
-                              upbit_amount,
+                              upbit_sold_amount,
                               binance_entry_price_usd * one_dollar_into_krw,
                               upbit_buy_price_krw,
                               binance_close_price_krw,
