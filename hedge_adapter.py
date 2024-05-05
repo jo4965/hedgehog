@@ -26,21 +26,23 @@ def find_apikey_by_user_name(user_name: str):
 """
 
 
-def find_hedge_by_user_name(user_name: str):
+def find_hedge_by_user_name(user_name: str, split_level: int):
     records = pocket.get_full_list("current_hedge",
                                    query_params={
-                                       "filter": "user_name = '%s'" % user_name
+                                       "filter": "user_name = '%s' && split_level = %s" % (user_name, split_level)
                                    })
 
     return records
 
 
-def save_current_hedge(user_name: str, base, exchange, amount, KRW_price: float, USD_price: float):
+def save_current_hedge(user_name: str, base, exchange, split_level, split_value, amount, KRW_price: float, USD_price: float):
     pocket.create("current_hedge",
                   {
                       "user_name": user_name,
                       "base": base,
                       "exchange": exchange,
+                      "split_level": split_level,
+                      "split_value": split_value,
                       "amount": amount,
                       "KRW_price": KRW_price,
                       "USD_price": USD_price
@@ -51,6 +53,8 @@ def save_history(user_name: str,
                  base,
                  exchange, leverage,
                  when: str,
+                 split_level,
+                 split_value: float,
                  amount, KRW_price: float, USD_price: float):
     pocket.create("history",
                   {
@@ -59,57 +63,71 @@ def save_history(user_name: str,
                       "exchange": exchange,
                       "leverage": leverage,
                       "when": when,
+                      "split_level": split_level,
+                      "split_value": split_value,
                       "amount": amount,
                       "KRW_price": KRW_price,
                       "USD_price": USD_price
                   })
 
 
-def save_current_hedge_from_upbit(user_name, base, upbit_response, one_dollar_into_krw: float):
+def save_current_hedge_from_upbit(user_name, base, split_level, split_value, upbit_response, one_dollar_into_krw: float):
     bought_amount = float(upbit_response.get("executed_volume"))
     bought_price_krw = float(upbit_response.get("price")) * 1.0005
 
     save_current_hedge(user_name, base, "Upbit",
+                       split_level,
+                       split_value,
                        bought_amount,
                        round(bought_price_krw),
                        round(bought_price_krw / one_dollar_into_krw, 2))  # dollar exchange
 
     save_history(user_name, base, "Upbit", 1, "entry",
+                 split_level,
+                 split_value,
                  bought_amount,
                  round(bought_price_krw),
                  round(bought_price_krw / one_dollar_into_krw, 2))  # dollar exchange
 
 
-def save_current_hedge_from_binance(user_name, base, leverage, binance_response: OrderResponse,
+def save_current_hedge_from_binance(user_name, base, split_level, split_value, leverage, binance_response: OrderResponse,
                                     one_dollar_into_krw: float):
     bought_amount = binance_response.origQty
     bought_price_usd = binance_response.cumQuote
 
     save_current_hedge(user_name, base, "Binance",
+                       split_level,
+                       split_value,
                        bought_amount,
                        round(bought_price_usd * one_dollar_into_krw),
                        round(bought_price_usd, 2))  # dollar exchange
 
     save_history(user_name, base, "Binance", leverage, "entry",
+                 split_level,
+                 split_value,
                  bought_amount,
                  round(bought_price_usd * one_dollar_into_krw),
                  round(bought_price_usd, 2))  # dollar exchange
 
 
-def save_close_history_from_upbit(user_name, base, upbit_sold_amount, upbit_sold_krw, one_dollar_into_krw):
+def save_close_history_from_upbit(user_name, base, split_level, split_value,
+                                  upbit_sold_amount, upbit_sold_krw, one_dollar_into_krw):
     upbit_sold_krw *= 0.9995
     save_history(user_name, base, "Upbit", 1, "close",
+                 split_level, split_value,
                  upbit_sold_amount,
                  round(upbit_sold_krw),
                  round(upbit_sold_krw / one_dollar_into_krw, 2))  # dollar exchange
 
 
-def save_close_history_from_binance(user_name, base, leverage, binance_response: OrderResponse,
+def save_close_history_from_binance(user_name, base, split_level, split_value,
+                                    leverage, binance_response: OrderResponse,
                                     one_dollar_into_krw: float):
     close_amount = binance_response.origQty
     close_price_usd = binance_response.cumQuote
 
     save_history(user_name, base, "Binance", leverage, "close",
+                 split_level, split_value,
                  close_amount,
                  round(close_price_usd * one_dollar_into_krw),
                  round(close_price_usd, 2))  # dollar exchange
@@ -120,13 +138,15 @@ def clear_current_hedge(records):
         pocket.delete("current_hedge", rec.id)
 
 
-def calculate_and_save_profit(user_name, base, leverage, amount,
+def calculate_and_save_profit(user_name, base, split_level, split_value,
+                              amount,
                               entry_kimp_krw, close_kimp_krw):
     pocket.create("profit",
                   {
                       "user_name": user_name,
                       "base": base,
-                      "leverage": leverage,
+                      "split_level": split_level,
+                      "split_value": split_value,
                       "amount": amount,
                       "KRW_entry_kimp": round(entry_kimp_krw),
                       "KRW_close_kimp": round(close_kimp_krw),

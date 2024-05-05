@@ -53,6 +53,7 @@ class LoggerWithDiscord:
             print(message)
 
     def log_hedge_on_message(self, exchange,
+                             split_level, split_value,
                              exchange_amount, upbit_amount,
                              exchange_krw_price, upbit_krw_price,
                              one_dollar_into_krw):
@@ -77,6 +78,12 @@ class LoggerWithDiscord:
         kimp_percent = kimp_krw / exchange_krw_price * 100
 
         embed.add_field(
+            name="스플릿 정보",
+            value=f"스플릿 레벨: {split_level}\n임계값: {split_value}%\n현재 김프: {round(kimp_percent, 2)}%",
+            inline=False,
+        )
+
+        embed.add_field(
             name="김프",
             value=f"헷지 시작시 김프: {round(kimp_percent, 2)}%, {round(kimp_krw)}원",
             inline=False,
@@ -84,6 +91,7 @@ class LoggerWithDiscord:
         self.log_message("nothing", embed)
 
     def log_hedge_off_message(self, exchange,
+                              split_level, split_value,
                               exchange_amount, upbit_amount,
                               exchange_entry_krw_price, upbit_entry_krw_price,
                               exchange_close_krw_price, upbit_close_krw_price,
@@ -118,6 +126,12 @@ class LoggerWithDiscord:
 
         close_kimp_krw_with_fee = upbit_close_krw_price * 0.9995 - exchange_close_krw_price
         profit_kimp_krw = close_kimp_krw_with_fee - entry_kimp_krw
+
+        embed.add_field(
+            name="스플릿 정보",
+            value=f"스플릿 레벨: {split_level}\n임계값: {split_value}%\n현재 김프: {round(close_kimp_percent, 2)}%",
+            inline=False,
+        )
 
         embed.add_field(
             name="김프",

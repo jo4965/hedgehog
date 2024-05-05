@@ -9,7 +9,8 @@ QUOTE_LITERAL = Literal[
 class HedgeData(BaseModel):
     user_name: str
     base: str
-    quote: QUOTE_LITERAL = "USDT.P"
+    split_level: int
+    split_value: float | None = None
     amount: float | None = None
     hedge: str
 
