@@ -17,7 +17,7 @@ ENVIRON_UPBIT_SECRET="UPBIT_SECRET"
 if __name__ == '__main__':
     # one_dollar_into_krw = request_one_dollar_into_krw()
     # print(one_dollar_into_krw, type(one_dollar_into_krw))
-    start_hedge("zenike", "BTC", "USDT.P", round(0.015141, 5), "ON", BackgroundTasks())
+    start_hedge("zenike", "BTC", round(0.015141, 5), "ON", BackgroundTasks())
     # start_hedge("zenike", "BTC", "USDT.P", round(0.015141, 5), "OFF", BackgroundTasks())
 
     # symbol = "BTCUSDT"

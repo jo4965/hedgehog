@@ -84,7 +84,7 @@ def create_default_error():
     }
 
 
-def enter_hedge(user_name, base, quote, amount, background_tasks):
+def enter_hedge(user_name, base, amount, background_tasks):
     user_info = hedge_adapter.find_apikey_by_user_name(user_name)
 
     if user_info is None:
@@ -149,7 +149,7 @@ def enter_hedge(user_name, base, quote, amount, background_tasks):
     return {"result": "success"}
 
 
-def close_hedge(user_name, base, quote, background_tasks):
+def close_hedge(user_name, base, background_tasks):
     user_info = hedge_adapter.find_apikey_by_user_name(user_name)
 
     if user_info is None:
@@ -249,16 +249,13 @@ async def hedge(hedge_data: HedgeData, background_tasks: BackgroundTasks):
     # BTC
     base = hedge_data.base
 
-    # USDT.P
-    quote = hedge_data.quote
-
     amount = hedge_data.amount
 
     # ON or OFF
     hedge = hedge_data.hedge
 
     try:
-        return start_hedge(user_name, base, quote, amount, hedge, background_tasks)
+        return start_hedge(user_name, base, amount, hedge, background_tasks)
     except Exception as e:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
@@ -269,11 +266,11 @@ async def hedge(hedge_data: HedgeData, background_tasks: BackgroundTasks):
         return create_default_error()
 
 
-def start_hedge(user_name, base, quote, amount, hedge, background_tasks: BackgroundTasks):
+def start_hedge(user_name, base, amount, hedge, background_tasks: BackgroundTasks):
     if hedge == "ON":
-        return enter_hedge(user_name, base, quote, amount, background_tasks)
+        return enter_hedge(user_name, base, amount, background_tasks)
     elif hedge == "OFF":
-        return close_hedge(user_name, base, quote, background_tasks)
+        return close_hedge(user_name, base, background_tasks)
 
 
 if __name__ == '__main__':
