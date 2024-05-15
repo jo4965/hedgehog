@@ -26,10 +26,10 @@ def find_apikey_by_user_name(user_name: str):
 """
 
 
-def find_hedge_by_user_name(user_name: str, split_level: int):
+def find_hedge_by_user_name(user_name: str, split_value: float):
     records = pocket.get_full_list("current_hedge",
                                    query_params={
-                                       "filter": "user_name = '%s' && split_level = %s" % (user_name, split_level)
+                                       "filter": "user_name = '%s' && split_value <= %s" % (user_name, split_value)
                                    })
 
     return records
