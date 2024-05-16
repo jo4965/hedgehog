@@ -40,23 +40,24 @@ async def startup():
     admin_logger.log_message(f"Hedgehog %s 실행 완료!" % VERSION)
 
 
-whitelist = ["182.231.107.125", "52.89.214.238", "34.212.75.30",
-             "54.218.53.128", "52.32.178.7", "127.0.0.1", "125.178.123.80"]
+# whitelist = ["182.231.107.125", "52.89.214.238", "34.212.75.30",
+#              "54.218.53.128", "52.32.178.7", "127.0.0.1", "125.178.123.80"]
 
 
 @app.middleware("http")
 async def whitelist_middleware(request: Request, call_next):
-    try:
-        if request.client.host not in whitelist and not ipaddress.ip_address(request.client.host).is_private:
-            msg = f"{request.client.host}는 안됩니다"
-            print(msg)
-            return ORJSONResponse(status_code=status.HTTP_403_FORBIDDEN,
-                                  content=f"{request.client.host}는 허용되지 않습니다")
-    except:
-        admin_logger.log_error_message(traceback.format_exc(), "미들웨어 에러")
-    else:
-        response = await call_next(request)
-        return response
+    return await call_next(request)
+    # try:
+    #     if request.client.host not in whitelist and not ipaddress.ip_address(request.client.host).is_private:
+    #         msg = f"{request.client.host}는 안됩니다"
+    #         print(msg)
+    #         return ORJSONResponse(status_code=status.HTTP_403_FORBIDDEN,
+    #                               content=f"{request.client.host}는 허용되지 않습니다")
+    # except:
+    #     admin_logger.log_error_message(traceback.format_exc(), "미들웨어 에러")
+    # else:
+    #     response = await call_next(request)
+    #     return response
 
 
 @app.exception_handler(RequestValidationError)
@@ -74,6 +75,13 @@ async def validation_exception_handler(request, exc):
 @app.get("/hi")
 async def welcome():
     return "hi!!"
+
+@app.get("/twitter")
+async def oauth2(request: Request):
+    params = request.query_params
+    admin_logger.log_message(f'{params}')
+    return f'{params}'
+
 
 
 def create_default_error():
