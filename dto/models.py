@@ -9,8 +9,8 @@ QUOTE_LITERAL = Literal[
 class HedgeData(BaseModel):
     user_name: str
     base: str
-    quote: QUOTE_LITERAL = "USDT.P"
-    amount: float | None = None
+    how_much: int
+    one_dollar_krw: float
     hedge: str
 
     @root_validator(pre=True)

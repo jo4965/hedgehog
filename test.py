@@ -4,7 +4,7 @@ from exchange import BinanceFuturesClient, UpbitClient, OrderState
 import os
 from fastapi import BackgroundTasks
 from dotenv import load_dotenv
-from main import start_hedge
+from main import start_hedge, close_hedge
 from dto.models import HedgeData
 from main import request_one_dollar_into_krw
 load_dotenv()
@@ -13,13 +13,19 @@ ENVIRON_BINANCE_KEY="BINANCE_KEY"
 ENVIRON_BINANCE_SECRET="BINANCE_SECRET"
 ENVIRON_UPBIT_KEY="UPBIT_KEY"
 ENVIRON_UPBIT_SECRET="UPBIT_SECRET"
-
+import requests
 if __name__ == '__main__':
     # one_dollar_into_krw = request_one_dollar_into_krw()
     # print(one_dollar_into_krw, type(one_dollar_into_krw))
-    start_hedge("zenike", "BTC", round(0.015141, 5), "ON", BackgroundTasks())
+    # auth_key = "OA3BvLfyhEk708IIsciurwDztQJVidYK"
+    # res = requests.get(f"https://www.koreaexim.go.kr/site/program/financial/exchangeJSON?authkey={auth_key}&data=AP01")
+    # print(res.text)
+    # start_hedge("zenike", "USDT", 10000, "ON", BackgroundTasks())
     # start_hedge("zenike", "BTC", "USDT.P", round(0.015141, 5), "OFF", BackgroundTasks())
 
+    # start_hedge("zenike", "USDT", 10000, 1355, "ON", BackgroundTasks())
+    start_hedge("zenike", "USDT", 10000, 1355, "OFF", BackgroundTasks())
+    # close_hedge("zenike", "USDT", 1344, 1355, "ON", BackgroundTasks())
     # symbol = "BTCUSDT"
     # binance_client = BinanceFuturesClient(key=os.getenv(ENVIRON_BINANCE_KEY),
     #                                       secret=os.getenv(ENVIRON_BINANCE_SECRET))

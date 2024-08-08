@@ -43,6 +43,7 @@ class UpbitClient:
 
     def request_order_with_amount(self, symbol, buy_or_sell, amount):
         symbol = change_into_upbit_symbol(symbol)
+        # return None
         # 매수 시에는 개수로 호출이 불가능하여 개수에 해당하는 가격을 구해와야 함
         if buy_or_sell == "BUY":
             price = self.calculate_buy_price_from_amount_plus_fee(symbol, amount)
@@ -50,6 +51,20 @@ class UpbitClient:
             return self.client.get_order(buy_res['uuid'])
         elif buy_or_sell == "SELL":
             sell_res = self.client.sell_market_order(symbol, amount)
+            return self.client.get_order(sell_res['uuid'])
+        else:
+            print("type must be BUY or SELL")
+
+
+    def request_order_with_money(self, symbol, buy_or_sell, how_much):
+        symbol = change_into_upbit_symbol(symbol)
+        # return None
+        # 매수 시에는 개수로 호출이 불가능하여 개수에 해당하는 가격을 구해와야 함
+        if buy_or_sell == "BUY":
+            buy_res = self.client.buy_market_order(symbol, how_much)
+            return self.client.get_order(buy_res['uuid'])
+        elif buy_or_sell == "SELL":
+            sell_res = self.client.sell_market_order(symbol, how_much)
             return self.client.get_order(sell_res['uuid'])
         else:
             print("type must be BUY or SELL")
@@ -85,9 +100,9 @@ class UpbitClient:
     # 0.1개 보다 크면 0.1개씩 쪼개서 팝니다.
     def split_request_sell_order(self, symbol, amount):
         leftover = amount
-        split_amount = 0.1
-        sold_amount = 0.0
-        sold_price_krw = 0.0
+        split_amount = 5000
+        sold_amount = 0
+        sold_price_krw = 0
         while leftover > 0.0:
             if leftover < split_amount:
                 amount_to_sell = leftover

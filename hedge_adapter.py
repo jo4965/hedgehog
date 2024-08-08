@@ -71,13 +71,13 @@ def save_current_hedge_from_upbit(user_name, base, upbit_response, one_dollar_in
 
     save_current_hedge(user_name, base, "Upbit",
                        bought_amount,
-                       round(bought_price_krw),
-                       round(bought_price_krw / one_dollar_into_krw, 2))  # dollar exchange
+                       bought_price_krw,
+                       bought_price_krw / one_dollar_into_krw)  # dollar exchange
 
     save_history(user_name, base, "Upbit", 1, "entry",
                  bought_amount,
-                 round(bought_price_krw),
-                 round(bought_price_krw / one_dollar_into_krw, 2))  # dollar exchange
+                 bought_price_krw,
+                 bought_price_krw / one_dollar_into_krw)  # dollar exchange
 
 
 def save_current_hedge_from_binance(user_name, base, leverage, binance_response: OrderResponse,
@@ -120,14 +120,14 @@ def clear_current_hedge(records):
         pocket.delete("current_hedge", rec.id)
 
 
-def calculate_and_save_profit(user_name, base, leverage, amount,
+def calculate_and_save_profit(user_name, base, sold_amount,
                               entry_kimp_krw, close_kimp_krw):
     pocket.create("profit",
                   {
                       "user_name": user_name,
                       "base": base,
-                      "leverage": leverage,
-                      "amount": amount,
+                      "leverage": 1,
+                      "amount": sold_amount,
                       "KRW_entry_kimp": round(entry_kimp_krw),
                       "KRW_close_kimp": round(close_kimp_krw),
                       "KRW_kimp_profit": round(close_kimp_krw - entry_kimp_krw),

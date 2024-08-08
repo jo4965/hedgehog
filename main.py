@@ -84,7 +84,7 @@ def create_default_error():
     }
 
 
-def enter_hedge(user_name, base, amount, background_tasks):
+def enter_hedge(user_name, base, how_much, one_dollar_into_krw, background_tasks):
     user_info = hedge_adapter.find_apikey_by_user_name(user_name)
 
     if user_info is None:
@@ -93,27 +93,7 @@ def enter_hedge(user_name, base, amount, background_tasks):
                                   "Request Body")
         return create_default_error()
 
-    amount = floor_with_precision(amount, 3)
-
     logger_with_discord = LoggerWithDiscord(user_info.discord_webhook_key)
-
-    binance_client = BinanceFuturesClient(user_info.binance_api_key,
-                                          user_info.binance_api_secret)
-
-    # binance short
-    binance_short_res = binance_client.request_order_with_conditions(base, "SELL", "MARKET",
-                                                                     amount,
-                                                                     leverage=user_info.binance_leverage)
-
-    if binance_short_res.status != "FILLED":
-        binance_short_res = binance_client.wait_until_order_done(binance_short_res)
-
-    one_dollar_into_krw = request_one_dollar_into_krw()
-
-    hedge_adapter.save_current_hedge_from_binance(user_name, base,
-                                                  user_info.binance_leverage,
-                                                  binance_short_res,
-                                                  one_dollar_into_krw)
 
     # Upbit buy
     upbit_client = UpbitClient(user_info.upbit_api_key,
@@ -122,34 +102,31 @@ def enter_hedge(user_name, base, amount, background_tasks):
     # upbit_buy_res = upbit_client.request_buy_order(base, user_info.krw_amount_to_buy)
     while True:
         try:
-            upbit_buy_res = upbit_client.request_order_with_amount(base, "BUY", amount)
+            upbit_buy_res = upbit_client.request_order_with_money(base, "BUY", how_much)
             if not OrderState.is_order_completed(upbit_buy_res):
                 upbit_buy_res = upbit_client.wait_until_order_done(upbit_buy_res)
 
             break
         except Exception as e:
             background_tasks.add_task(logger_with_discord.log_message,
-                                      "업비트 매수에 실패했습니다. 재시도 합니다.\n 에러: %s\n Traceback: %s" % (str(e), traceback.format_exc()))
+                                      "업비트 매수에 실패했습니다. 재시도 합니다.\n 에러: %s\n Traceback: %s" % (
+                                      str(e), traceback.format_exc()))
             time.sleep(1)
-
 
     hedge_adapter.save_current_hedge_from_upbit(user_name, base, upbit_buy_res, one_dollar_into_krw)
 
     upbit_buy_krw = float(upbit_buy_res.get("price"))
     upbit_amount = float(upbit_buy_res.get("executed_volume"))
-    binance_short_usd = binance_short_res.cumQuote
 
     background_tasks.add_task(logger_with_discord.log_hedge_on_message,
-                              "BINANCE",
-                              amount, upbit_amount,
-                              binance_short_usd * one_dollar_into_krw,
+                              upbit_amount,
                               upbit_buy_krw,
                               one_dollar_into_krw)
 
     return {"result": "success"}
 
 
-def close_hedge(user_name, base, background_tasks):
+def close_hedge(user_name, base, one_dollar_into_krw, background_tasks):
     user_info = hedge_adapter.find_apikey_by_user_name(user_name)
 
     if user_info is None:
@@ -163,18 +140,14 @@ def close_hedge(user_name, base, background_tasks):
     hedge_records = hedge_adapter.find_hedge_by_user_name(user_name)
 
     upbit_amount = 0
-    binance_amount = 0
     upbit_buy_price_krw = 0.0
-    # binance_entry_price_krw = 0.0 사용 X 매도 시점에 환율 다시 계산해야 함
-    binance_entry_price_usd = 0.0
+    upbit_buy_price_usd = 0.0
 
     for rec in hedge_records:
-        if rec.exchange == "Binance":
-            binance_amount += rec.amount
-            binance_entry_price_usd += rec.usd_price
-        elif rec.exchange == "Upbit":
+        if rec.exchange == "Upbit":
             upbit_amount += rec.amount
             upbit_buy_price_krw += rec.krw_price
+            upbit_buy_price_usd += rec.usd_price
         else:
             background_tasks.add_task(admin_logger.log_error_message,
                                       "Not available exchange name: %s " % rec.exchange,
@@ -184,58 +157,43 @@ def close_hedge(user_name, base, background_tasks):
                                       "DB Exchange Name")
             return create_default_error()
 
-    if upbit_amount == 0 or binance_amount == 0:
+    if upbit_amount == 0:
         background_tasks.add_task(logger_with_discord.log_message,
                                   "종료할 수량이 없습니다. Upbit: %d, Binance: %d" % (upbit_amount, binance_amount))
         return create_default_error()
-
-    binance_client = BinanceFuturesClient(user_info.binance_api_key,
-                                          user_info.binance_api_secret)
-
-    # binance close
-    binance_close_res = binance_client.request_order_with_conditions(base, "BUY", "MARKET",
-                                                                     binance_amount,
-                                                                     leverage=user_info.binance_leverage)
-
-    if binance_close_res.status != "FILLED":
-        binance_close_res = binance_client.wait_until_order_done(binance_close_res)
-
-    one_dollar_into_krw = request_one_dollar_into_krw()
-
-    hedge_adapter.save_close_history_from_binance(user_name, base, user_info.binance_leverage,
-                                                  binance_close_res, one_dollar_into_krw)
 
     upbit_client = UpbitClient(user_info.upbit_api_key,
                                user_info.upbit_api_secret)
 
     upbit_sold_amount, upbit_sell_price_krw = upbit_client.split_request_sell_order(base, upbit_amount)
-    hedge_adapter.save_close_history_from_upbit(user_name, base, upbit_sold_amount, upbit_sell_price_krw, one_dollar_into_krw)
+    hedge_adapter.save_close_history_from_upbit(user_name, base, upbit_sold_amount, upbit_sell_price_krw,
+                                                one_dollar_into_krw)
 
-    binance_close_price_usd = binance_close_res.cumQuote
-    binance_close_price_krw = binance_close_price_usd * one_dollar_into_krw
-    binance_close_amount = binance_close_res.origQty
+    former_one_dollar_into_krw = upbit_buy_price_usd / upbit_amount
+    upbit_tether_price = upbit_buy_price_krw / upbit_amount
 
-    entry_kimp_krw, entry_kimp_percent = hedge_adapter.calculate_entry_kimp(upbit_buy_price_krw, binance_entry_price_usd * one_dollar_into_krw)
-    close_kimp_krw = upbit_sell_price_krw - binance_close_price_krw
+    entry_kimp_krw = upbit_tether_price - former_one_dollar_into_krw
+    entry_kimp_percent = entry_kimp_krw / former_one_dollar_into_krw * 100
 
-    close_kimp_krw_with_fee = upbit_sell_price_krw * 0.9995 - binance_close_price_krw
+    close_kimp_krw = (upbit_sell_price_krw / upbit_amount) - one_dollar_into_krw;
+    close_kimp_percent = close_kimp_krw / one_dollar_into_krw * 100
 
-    hedge_adapter.calculate_and_save_profit(user_name, base, user_info.binance_leverage, binance_amount,
+    close_kimp_krw_with_fee = (upbit_sell_price_krw * 0.9995) / upbit_amount
+
+    hedge_adapter.calculate_and_save_profit(user_name, base, upbit_sold_amount,
                                             entry_kimp_krw,
                                             close_kimp_krw_with_fee)
 
     hedge_adapter.clear_current_hedge(hedge_records)
 
     background_tasks.add_task(logger_with_discord.log_hedge_off_message,
-                              "BINANCE",
-                              binance_close_amount,
                               upbit_sold_amount,
-                              binance_entry_price_usd * one_dollar_into_krw,
+                              upbit_sold_amount * former_one_dollar_into_krw,
                               upbit_buy_price_krw,
-                              binance_close_price_krw,
+                              upbit_sold_amount * one_dollar_into_krw,
                               upbit_sell_price_krw,
                               entry_kimp_krw, entry_kimp_percent,
-                              close_kimp_krw,
+                              close_kimp_krw, close_kimp_percent,
                               one_dollar_into_krw)
 
     return {"result": "success"}
@@ -249,13 +207,14 @@ async def hedge(hedge_data: HedgeData, background_tasks: BackgroundTasks):
     # BTC
     base = hedge_data.base
 
-    amount = hedge_data.amount
+    how_much = hedge_data.how_much
 
     # ON or OFF
     hedge = hedge_data.hedge
+    one_dollar_krw = hedge_data.one_dollar_krw
 
     try:
-        return start_hedge(user_name, base, amount, hedge, background_tasks)
+        return start_hedge(user_name, base, how_much, one_dollar_krw, hedge, background_tasks)
     except Exception as e:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
@@ -266,11 +225,11 @@ async def hedge(hedge_data: HedgeData, background_tasks: BackgroundTasks):
         return create_default_error()
 
 
-def start_hedge(user_name, base, amount, hedge, background_tasks: BackgroundTasks):
+def start_hedge(user_name, base, how_much, one_dollar_krw, hedge, background_tasks: BackgroundTasks):
     if hedge == "ON":
-        return enter_hedge(user_name, base, amount, background_tasks)
+        return enter_hedge(user_name, base, how_much, one_dollar_krw, background_tasks)
     elif hedge == "OFF":
-        return close_hedge(user_name, base, background_tasks)
+        return close_hedge(user_name, base, one_dollar_krw, background_tasks)
 
 
 if __name__ == '__main__':
