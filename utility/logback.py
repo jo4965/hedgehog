@@ -62,13 +62,13 @@ class LoggerWithDiscord:
 
         embed.add_field(
             name="비교",
-            value=f"현재 환율: {one_dollar_into_krw}\nTether 가격: {upbit_usdt_price}원",
+            value=f"현재 환율: {one_dollar_into_krw}\nTether 가격: {round(upbit_usdt_price, 1)}원",
             inline=False,
         )
 
         embed.add_field(
             name="주문 정보",
-            value=f"총 주문량: {upbit_amount}달러\n총 가격: {round(upbit_buy_krw * 1.0005)}원",
+            value=f"Tether 주문량: {upbit_amount}개\n총 가격: {round(upbit_buy_krw * 1.0005)}원",
             inline=False,
         )
 
