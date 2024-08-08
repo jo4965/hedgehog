@@ -83,10 +83,7 @@ class LoggerWithDiscord:
         self.log_message("nothing", embed)
 
     def log_hedge_off_message(self, upbit_amount,
-                              exchange_entry_krw_price, upbit_entry_krw_price,
-                              exchange_close_krw_price, upbit_close_krw_price,
-                              entry_kimp_krw, entry_kimp_percent,
-                              close_kimp_krw, close_kimp_percent,
+                              upbit_entry_krw_price, upbit_close_krw_price,
                               one_dollar_into_krw):
 
         date = parse_time(datetime.utcnow().timestamp())
@@ -101,29 +98,11 @@ class LoggerWithDiscord:
         )
 
         embed.add_field(
-            name="Entry 가격",
-            value=f"당시 환율: {round(exchange_entry_krw_price)}원\nUPBIT: {round(upbit_entry_krw_price)}원",
+            name="손익 계산",
+            value=f"Entry: {round(upbit_entry_krw_price)}원\nClose: {round(upbit_close_krw_price)}원\nProfit: {round(upbit_close_krw_price - upbit_entry_krw_price)}",
             inline=False,
         )
 
-        embed.add_field(
-            name="Close 가격",
-            value=f"현재 환율: {round(exchange_close_krw_price)}원\nUPBIT: {round(upbit_close_krw_price)}원",
-            inline=False,
-        )
-
-        profit_kimp_percent = close_kimp_percent - entry_kimp_percent
-
-        close_kimp_krw_with_fee = upbit_close_krw_price * 0.9995 - exchange_close_krw_price
-        profit_kimp_krw = close_kimp_krw_with_fee - entry_kimp_krw
-
-        embed.add_field(
-            name="김프",
-            value=f"entry: {round(entry_kimp_percent, 2)}%, {round(entry_kimp_krw)}원\n"
-                  f"close: {round(close_kimp_percent, 2)}%, {round(close_kimp_krw_with_fee)}원\n"
-                  f"profit: {round(profit_kimp_percent, 2)}%, {round(profit_kimp_krw)}원\n",
-            inline=False,
-        )
         self.log_message("nothing", embed)
 
     def log_error_message(self, error, name):

@@ -188,12 +188,7 @@ def close_hedge(user_name, base, one_dollar_into_krw, background_tasks):
 
     background_tasks.add_task(logger_with_discord.log_hedge_off_message,
                               upbit_sold_amount,
-                              upbit_sold_amount * former_one_dollar_into_krw,
-                              upbit_buy_price_krw,
-                              upbit_sold_amount * one_dollar_into_krw,
-                              upbit_sell_price_krw,
-                              entry_kimp_krw, entry_kimp_percent,
-                              close_kimp_krw, close_kimp_percent,
+                              upbit_buy_price_krw, upbit_sell_price_krw,
                               one_dollar_into_krw)
 
     return {"result": "success"}
