@@ -169,7 +169,7 @@ def close_hedge(user_name, base, one_dollar_into_krw, background_tasks):
     hedge_adapter.save_close_history_from_upbit(user_name, base, upbit_sold_amount, upbit_sell_price_krw,
                                                 one_dollar_into_krw)
 
-    former_one_dollar_into_krw = upbit_buy_price_usd / upbit_amount
+    former_one_dollar_into_krw = upbit_buy_price_krw / upbit_buy_price_usd
     upbit_tether_price = upbit_buy_price_krw / upbit_amount
 
     entry_kimp_krw = upbit_tether_price - former_one_dollar_into_krw
