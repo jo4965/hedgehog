@@ -68,7 +68,7 @@ class LoggerWithDiscord:
 
         embed.add_field(
             name="주문 정보",
-            value=f"Tether 주문량: {upbit_amount}개\n총 가격: {round(upbit_buy_krw * 1.0005)}원",
+            value=f"Tether 주문량: {upbit_amount}개\n총 가격: {round(upbit_buy_krw)}원",
             inline=False,
         )
 
