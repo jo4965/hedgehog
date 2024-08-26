@@ -53,7 +53,7 @@ class LoggerWithDiscord:
             print(message)
 
     def log_hedge_on_message(self, upbit_amount, upbit_buy_krw,
-                             one_dollar_into_krw):
+                             one_dollar_into_krw, kimp_percent):
         date = parse_time(datetime.utcnow().timestamp())
         embed = Embed(title="헷지 시작", description="", color=0x0000FF)
         embed.add_field(name="일시", value="20" + str(date), inline=False)
@@ -72,8 +72,7 @@ class LoggerWithDiscord:
             inline=False,
         )
 
-        kimp_krw = upbit_usdt_price - one_dollar_into_krw
-        kimp_percent = kimp_krw / one_dollar_into_krw * 100
+        kimp_krw = one_dollar_into_krw * kimp_percent / 100
 
         embed.add_field(
             name="김프",
@@ -84,7 +83,7 @@ class LoggerWithDiscord:
 
     def log_hedge_off_message(self, upbit_amount,
                               upbit_entry_krw_price, upbit_close_krw_price,
-                              one_dollar_into_krw):
+                              one_dollar_into_krw, kimp_percent):
 
         date = parse_time(datetime.utcnow().timestamp())
         embed = Embed(title="헷지 종료", description="", color=0x0000FF)
@@ -97,11 +96,21 @@ class LoggerWithDiscord:
             inline=False,
         )
 
+        kimp_krw = one_dollar_into_krw * kimp_percent / 100
+
+        embed.add_field(
+            name="김프",
+            value=f"헷지 종료시 김프: {round(kimp_percent, 2)}%, {round(kimp_krw)}원",
+            inline=False,
+        )
+
         embed.add_field(
             name="손익 계산",
             value=f"Entry: {round(upbit_entry_krw_price)}원\nClose: {round(upbit_close_krw_price)}원\nProfit: {round(upbit_close_krw_price - upbit_entry_krw_price)}",
             inline=False,
         )
+
+
 
         self.log_message("nothing", embed)
 

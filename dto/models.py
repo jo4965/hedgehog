@@ -11,6 +11,7 @@ class HedgeData(BaseModel):
     base: str
     how_much: int
     one_dollar_krw: float
+    kimp: float
     hedge: str
 
     @root_validator(pre=True)

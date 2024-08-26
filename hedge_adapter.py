@@ -67,7 +67,7 @@ def save_history(user_name: str,
 
 def save_current_hedge_from_upbit(user_name, base, upbit_response, one_dollar_into_krw: float):
     bought_amount = float(upbit_response.get("executed_volume"))
-    bought_price_krw = float(upbit_response.get("price")) * 1.0005
+    bought_price_krw = float(upbit_response.get("price"))
 
     save_current_hedge(user_name, base, "Upbit",
                        bought_amount,

@@ -84,7 +84,7 @@ def create_default_error():
     }
 
 
-def enter_hedge(user_name, base, how_much, one_dollar_into_krw, background_tasks):
+def enter_hedge(user_name, base, how_much, one_dollar_into_krw, kimp_percent, background_tasks):
     user_info = hedge_adapter.find_apikey_by_user_name(user_name)
 
     if user_info is None:
@@ -121,12 +121,13 @@ def enter_hedge(user_name, base, how_much, one_dollar_into_krw, background_tasks
     background_tasks.add_task(logger_with_discord.log_hedge_on_message,
                               upbit_amount,
                               upbit_buy_krw,
-                              one_dollar_into_krw)
+                              one_dollar_into_krw,
+                              kimp_percent)
 
     return {"result": "success"}
 
 
-def close_hedge(user_name, base, one_dollar_into_krw, background_tasks):
+def close_hedge(user_name, base, one_dollar_into_krw, kimp_percent, background_tasks):
     user_info = hedge_adapter.find_apikey_by_user_name(user_name)
 
     if user_info is None:
@@ -175,8 +176,7 @@ def close_hedge(user_name, base, one_dollar_into_krw, background_tasks):
     entry_kimp_krw = upbit_tether_price - former_one_dollar_into_krw
     entry_kimp_percent = entry_kimp_krw / former_one_dollar_into_krw * 100
 
-    close_kimp_krw = (upbit_sell_price_krw / upbit_amount) - one_dollar_into_krw;
-    close_kimp_percent = close_kimp_krw / one_dollar_into_krw * 100
+    close_kimp_krw = kimp_percent * one_dollar_into_krw / 100
 
     close_kimp_krw_with_fee = (upbit_sell_price_krw * 0.9995) / upbit_amount
 
@@ -189,7 +189,7 @@ def close_hedge(user_name, base, one_dollar_into_krw, background_tasks):
     background_tasks.add_task(logger_with_discord.log_hedge_off_message,
                               upbit_sold_amount,
                               upbit_buy_price_krw, upbit_sell_price_krw,
-                              one_dollar_into_krw)
+                              one_dollar_into_krw, kimp_percent)
 
     return {"result": "success"}
 
@@ -208,8 +208,10 @@ async def hedge(hedge_data: HedgeData, background_tasks: BackgroundTasks):
     hedge = hedge_data.hedge
     one_dollar_krw = hedge_data.one_dollar_krw
 
+    kimp = hedge_data.kimp
+
     try:
-        return start_hedge(user_name, base, how_much, one_dollar_krw, hedge, background_tasks)
+        return start_hedge(user_name, base, how_much, one_dollar_krw, kimp, hedge, background_tasks)
     except Exception as e:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
@@ -220,11 +222,11 @@ async def hedge(hedge_data: HedgeData, background_tasks: BackgroundTasks):
         return create_default_error()
 
 
-def start_hedge(user_name, base, how_much, one_dollar_krw, hedge, background_tasks: BackgroundTasks):
+def start_hedge(user_name, base, how_much, one_dollar_krw, kimp, hedge, background_tasks: BackgroundTasks):
     if hedge == "ON":
-        return enter_hedge(user_name, base, how_much, one_dollar_krw, background_tasks)
+        return enter_hedge(user_name, base, how_much, one_dollar_krw, kimp, background_tasks)
     elif hedge == "OFF":
-        return close_hedge(user_name, base, one_dollar_krw, background_tasks)
+        return close_hedge(user_name, base, one_dollar_krw, kimp, background_tasks)
 
 
 if __name__ == '__main__':
