@@ -160,7 +160,7 @@ def close_hedge(user_name, base, one_dollar_into_krw, kimp_percent, background_t
 
     if upbit_amount == 0:
         background_tasks.add_task(logger_with_discord.log_message,
-                                  "종료할 수량이 없습니다. Upbit: %d, Binance: %d" % (upbit_amount, binance_amount))
+                                  "종료할 수량이 없습니다. Upbit: %d" % upbit_amount)
         return create_default_error()
 
     upbit_client = UpbitClient(user_info.upbit_api_key,
