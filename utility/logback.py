@@ -88,11 +88,18 @@ class LoggerWithDiscord:
         date = parse_time(datetime.utcnow().timestamp())
         embed = Embed(title="헷지 종료", description="", color=0x0000FF)
         embed.add_field(name="일시", value="20" + str(date), inline=False)
-        embed.add_field(name="환율", value=f"{one_dollar_into_krw}원", inline=False)
 
         embed.add_field(
             name="수량",
             value=f"UPBIT: {upbit_amount}",
+            inline=False,
+        )
+
+        upbit_usdt_price = upbit_close_krw_price / upbit_amount
+
+        embed.add_field(
+            name="비교",
+            value=f"현재 환율: {one_dollar_into_krw}\nTether 가격: {round(upbit_usdt_price, 1)}원",
             inline=False,
         )
 
