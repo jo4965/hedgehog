@@ -16,6 +16,7 @@ import math
 from dotenv import load_dotenv
 import sys
 import traceback
+from utility import pocket
 
 load_dotenv()
 
@@ -83,6 +84,14 @@ def create_default_error():
         "result": "error"
     }
 
+@app.get("/hi2")
+async def welcome2():
+    try:
+        pocket.auth()
+    except Exception as e:
+        traceback.print_exc()
+
+    return "hi2!"
 
 def enter_hedge(user_name, base, how_much, one_dollar_into_krw, kimp_percent, background_tasks):
     user_info = hedge_adapter.find_apikey_by_user_name(user_name)
