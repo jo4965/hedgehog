@@ -56,7 +56,7 @@ async def whitelist_middleware(request: Request, call_next):
             return ORJSONResponse(status_code=status.HTTP_403_FORBIDDEN,
                                   content=f"{request.client.host}는 허용되지 않습니다")
     except:
-        admin_logger.log_error_message(traceback.format_exc(), "미들웨어 에러")
+        admin_logger.log_error_message(traceback.format_exc(), "미들웨어 에러 request: {}".format(request))
     else:
         response = await call_next(request)
         return response
@@ -120,7 +120,8 @@ def enter_hedge(user_name, base, how_much, one_dollar_into_krw, kimp_percent, ba
             background_tasks.add_task(logger_with_discord.log_message,
                                       "업비트 매수에 실패했습니다. 재시도 합니다.\n 에러: %s\n Traceback: %s" % (
                                       str(e), traceback.format_exc()))
-            time.sleep(1)
+            time.sleep(10)
+
 
     hedge_adapter.save_current_hedge_from_upbit(user_name, base, upbit_buy_res, one_dollar_into_krw)
 
